@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+            
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+            
+  <meta name="GENERATOR" content="Mozilla/4.77 [en] (X11; U; Linux 2.4.3-12 i686) [Netscape]">
+</head>
+ <body>
+<h1> C++ Analysis Code</h1>
+<h3> Objectives:</h3>
+   To provide a modern analysis code for Whipple that is independent of the 
+ Purdue analysis, written in C++ and based roughly on the Quicklook code that
+has been successfully used by the Tucson group for many years. <br>
+  Although the code can be considered "based on" the existing FORTRAN Quicklook
+ code, that basis comes more from my experience with Quicklook over the past
+ few years than any actual attempt to "translate" the code from FORTRAN to
+ C++. For example, the algorithms used by Quicklook to determine which tubes
+ can be considered as switched off have been implemented from scratch, but
+ produce the same results as the FORTRAN analysis. In fact the parameters
+produced are almost identical, event for event.   
+<h3> Features:</h3>
+<ul>
+  <li> Object oriented design</li>
+  <ul>
+    <li> Support for code reusability. Most od the code is in the form of
+ an object oriented library which is used by various applications to do parts
+ of the analysis.</li>
+    <li> Standard interfaces are defined for various parts of the analysis,
+ which allow different algorithms to be selected. For example, a Cleaning
+interface supports the notion of image cleaning and allows picture/boundary,
+island, wavelet cleaning be selected).</li>
+  </ul>
+  <li> Automatic code generation</li>
+  <ul>
+    <li> Data structures are defined in abstract way and C++ code generated
+ automatically from these definitions.</li>
+    <li> Generators allow changes in underlying structure to be propagated
+ through code without error (assuming that the generator is implemented correctly!), 
+ reducing programming errors that arise from changing a fundamental data structure
+but forgetting to change all of the locations where the structure is used.</li>
+    <li> Code generators translate the structure into C++ class definitions
+ and helper functions. For example, the first step in the analysis is to
+convert  the GDF file into a reduced format, after cleaning up the events.
+This file  is comprised of objects of the <b>RedEvent</b> type (this stands
+for reduced  event). The <a href="RedEvent.h.txt">C++ code that defines</a>
+   the <b>RedEvent</b> type is automatically generated from an <a href="reduced.sc.txt">
+  abstract definition</a>
+  . The parameterized file is based on a type <b>HillasParam</b> and <b>EventInfo</b>
+   which have the parameters and auxiliary event information respectively.
+ To produce the code that implements these objects all that is required is
+ to write the abstract definition.</li>
+    <li> There are also generators that produce C++ code to define a HDF5
+ representation of the structure. Again, for the <b>RedEvent</b> type and
+the other types mentioned above <a href="RedEvent.cxx.txt">these routines</a>
+   are generated automatically and allow for changes to be made in an easy
+ fashion.</li>
+    <li> An elementary attempt at providing version control is provided.
+Each of the data types has a version number associated with it which controls
+which of the members are accessible. If a program accesses a variable that
+is <i> not supported</i> by the version of the class in use an exception
+is thrown. It is not clear yet whether this will provide flexible enough
+in real applications.</li>
+  </ul>
+  <li> Input/output is done by an abstract <b>File Access</b> type (strictly
+ it is a template type).</li>
+  <ul>
+    <li> Derived classes based on the <b>FileAccess</b> object can be produced
+ to do I/O from any file type desired.</li>
+    <li> At this time a <b>HDF5 FileAccess</b> object is used to read and
+ write from HDF5 datasets.</li>
+    <li> A <b>Caching FileAccess</b> object is also implemented. It was found
+ that repeated calls to the HDF5 API reading single events at a time was
+very  inefficient. The <b>Caching FileAccess</b> reads the file in large
+blocks.  It can be used in conjunction with any file access object to speed
+up I/O.</li>
+    <li> An MPI aware <b>FileAccess</b> object that uses the HDF5 MPI API
+ would be relatively easy to implement and would allow the library to be
+used  in a parallel environment with minimal change.</li>
+    <li> As mentioned the <b>FileAccess</b> type is actually what is referred
+ to in C++ as a template type. This means that it is parameterized by a type. 
+ A given <b>FileAccess</b> object is able to read and write only objects of
+a given kind. For example, a given <b>FileAccess</b> parameterized by the
+      <b>RedEvent</b> type is capable of returning only <b>RedEvent</b> 
+types.  Trying to read <b>HillasParam</b> types using it is invalid (in fact
+the code will not even compile!).</li>
+  </ul>
+  <li> Database support</li>
+  <ul>
+    <li> The code interfaces with any database that is supported by the 
+      <a href="http://www.unixODBC.org/">unixODBC</a>
+    library. All SQL databases of merit are supported by this library, including 
+ PostgreSQL which is supplied with RedHat.</li>
+    <li> Pedestal and Gains information are stored in the database and can
+ thus be shared between users on different machines.</li>
+    <li> Database usage is limited to the peds and gains at present. It would
+ be nice to store more useful information in the database. For example, it 
+ would be nice for the code to be able to access the log-sheet database. Also
+storing results of the analysis in the database as a summary of counts/background 
+ (or for VERITAS maybe the parameters for every gamma-ray could be stored!).</li>
+    <li><br>
+    </li>
+  </ul>
+  <li> Camera definition file</li>
+  <ul>
+    <li> The camera information is stored externally from the code. In fact,
+ they are stored in HDF5 files. Changing the parameters of the camera (for
+ example if the tube coordinates are wrong!) is then as easy as changing
+the  file. Also, policy decisions regarding the camera (outer tubes ignored/used) 
+ are also made in this file and so can be made at run time by choice of which
+ camera definition file to use.</li>
+  </ul>
+</ul>
+<h3> Installation:</h3>
+   The code is known to work on RedHat 6.2/7.0 and 7.1 but it requires that 
+ certain libraries be installed. You will need to install the following: 
+ 
+<ul>
+  <li> HDF5 library version 1.4.0 or greater. There have been changes to
+the HDF API and data file format between 1.2 and 1.4 that are significant
+enough that the code will NOT work with 1.2.x, although it did previously.</li>
+  <li> postgreSQL database server. This ships with Redhat 6.2 and greater
+ but may not be activated on your system.</li>
+  <li> libODBC++, an object oriented database access library. You need 0.2.2pre5. 
+ Redhat 7.1 comes with 0.2.2pre4 which has some errors in it.</li>
+</ul>
+   In addition certain programs will not compile without other libraries
+  
+<ul>
+  <li> The graphics library QT and library of useful components QWT is needed 
+ by <b>qteventviewer</b> a graphical event viewer.</li>
+  <li> The general purpose FFT library libfftw is needed by <b>timesfft</b>
+   which produces power spectra of raw events times.</li>
+  <li> Star link asronomical library (slalib) is used by <b>ghist2d</b> which 
+ produces 2-dimensional maps. Purdue analysis uses this also.</li>
+  <li> libGDF is needed by <b>fz2h5</b> to read in fz data files.</li>
+</ul>
+   Step by step installation instructions follow.   
+<ol>
+  <li> Obtain the  <a href="package.tar.gz">source code</a>
+    and  <a href="libraries">libraries that you need or want</a>
+   .</li>
+  <li> Install the libraries. In general you should install these in /usr/local 
+ but you will probably end up having less problems if you install them into 
+ /usr. In particular RedHat 7.1 is shipped with a faulty libodbc++ in /usr/lib
+ which will take precidence if you install the new on in /usr/local/lib.</li>
+  <li> Unpack the source code and compile it with <br>
+    <b><tt>make</tt></b>. </li>
+  <li>If you want to compile the QT dependent code (just the viewer at this
+ time) do <b><tt>make qt</tt></b>.</li>
+  <li>Put the libraries, <b><tt>libAnalysis.so</tt></b> and <tt><b>libQComponents.so</b></tt>
+  (if you made the Qt bits) somewhere your linker searches, like /usr/local/lib. 
+I presonally use a lib directory off my home directory for all my personal 
+ library files, I then add the following line to my .login "<b><tt>setenv 
+LD_LIBRARY_PATH $HOME/lib</tt></b>" to have the linker search it.<br>
+  </li>
+  <li> Enable the postgreSQL database. On RedHat this can be done by logging
+ in as root and doing <br>
+    <b><tt>chkconfig postgresql on</tt></b><br>
+  and then <b><tt><br>
+  /etc/rc.d/init.d/postgresql start</tt></b>.</li>
+  <li> Prepare the database. This is one of the more tricky things to do
+but is not too hard. First decide which user you want to <i>own</i> the database. 
+ Log in as root and them <br>
+    <b><tt>su postgres</tt></b><br>
+  to change to the postgres user. Run <b><tt><br>
+  createuser</tt></b><br>
+  which adds a user to the postgres system, this user can be your username
+ or one made specifically for the purpose. The user will be known only to
+the database, this does NOT make a new user on the system that can log in
+with ssh etc.. Answer the questions asked, in general give this user the
+most permissions possible (eg. yes to allow create databases and yes to allow
+create users etc..).</li>
+  <li> You can share the database between different users on the system,
+to do this you must enable network access to the database. This is quite
+easy to do, email me and I can advise you on that.</li>
+  <li> Create the database itself with the postgres utility <tt><b>createdb</b></tt>
+  . Try something like the following<br>
+    <b><tt>createdb -U USERNAME analysis</tt></b></li>
+  <li>Create the DB structure using the file <tt><b>analysis.sql</b></tt>
+   in the source directory of the analysis package.<br>
+    <b><tt>psql -U USERNAME -f analysis.sql</tt></b><b><tt> analysis</tt></b><br>
+  </li>
+  <li>Tell the ODBC libraries where your database is. It uses the config
+file     <b><tt>.odbc.ini</tt></b> in your home directory. I have a sample
+one  of these in the analysis directory, its called <b><tt>odbc.ini</tt></b>
+ (i.e.  without the leading period). You will need to edit the "UserName
+=" and "Password   =" lines<br>
+    <b><tt>cp odbc.ini ~/.odbc.ini</tt></b><br>
+  </li>
+  <li>Can't think of anything else off hand but I'm sure there must be something!</li>
+</ol>
+<h3>Running the Analysis:</h3>
+ There are five programs involved in the analysis of data,<br>
+<ol>
+  <li><b><tt>fz2h5</tt></b>: convert from Whipple GDF files to a HDF5 file. 
+At present this program is not complete, it does not do any timing or consistancy 
+checks, but it does at least move the data over as is.</li>
+  <li><b><tt>gcpeds</tt></b>: calculate the pedestals and variances and store 
+them in the database.</li>
+  <li><b><tt>gn2gains</tt></b>: calculate the N2 gains and put them in the 
+database.</li>
+  <li><b><tt>gparamdat</tt></b>: parameterize the data using the peds and 
+gains and output a parameterized HDF5 file.</li>
+  <li><b><tt>gcut</tt></b>: apply Supercuts (or any parameter cuts) and display 
+the results as a big ASCII table</li>
+</ol>
+ Each of these programs can operate on a single file or on a collection of 
+files, using a script. In general the script approach is more flexable and 
+is invoked by calling the appropriate program with the <b><tt>--script SCRIPTFILE</tt></b>
+  option.<br>
+<br>
+ For example, consider the following script called say <b><tt>020124.scr</tt></b>
+<blockquote>
+  <pre>n2 gt019253 020124
+tr gt019254 gt019253 020124
+pr gt019255 gt019256 gt019253 020124
+</pre>
+  </blockquote>
+ This script demands the analysis of the N2 file gt019253, the TRK file gt019254 
+and the PAIR gt019255/gt019256. These scripts can be created automatically
+from the Veritas log sheet database, on the web at <a href="http://veritas.sao.arizona.edu/db/">
+http://veritas.sao.arizona.edu/db/</a>
+. Simply create a search to get the data you want, the chose to output the
+results as a <b>CAnalyze++</b> script.<br>
+  <br>
+To do the analysis do the following,<br>
+  <ol>
+    <li><b><tt>fz2red --script 020124.scr</tt></b></li>
+    <li><b><tt>gcpeds </tt></b><b><tt>--script 020124.scr</tt></b></li>
+    <li><b><tt>gn2gains </tt></b><b><tt>--script 020124.scr</tt></b></li>
+    <li><b><tt>gparamdat </tt></b><b><tt>--script 020124.scr</tt></b></li>
+    <li><b><tt>gcuts `cat SuperCuts` </tt></b><b><tt>--script 020124.scr</tt></b></li>
+  </ol>
+ The file SuperCuts must be in your directory also, it contains the options 
+to gcuts that specify the cuts to use. It looks something like this:<br>
+  <blockquote>--CutsHillasParam::LowerCutNImage=3<br>
+ --CutsHillasParam::LowerCutDist=0.40<br>
+ --CutsHillasParam::UpperCutDist=1.00<br>
+ --CutsHillasParam::LowerCutWidth=0.05<br>
+ --CutsHillasParam::UpperCutWidth=0.12<br>
+ --CutsHillasParam::LowerCutLength=0.13<br>
+ --CutsHillasParam::UpperCutLength=0.25<br>
+ --CutsHillasParam::LowerCutMax1=30<br>
+ --CutsHillasParam::LowerCutMax2=30<br>
+ --CutsHillasParam::UpperCutLengthOverSize=0.0004</blockquote>
+  That's it I think.<br>
+    <h3>Problems:</h3>
+   This has been my first big C++ project. It is probably overly complicated. 
+ If I were to start over I would think more about what I wanted to achieve 
+ before starting to write code. To some extent I didn't appreciate the scale 
+ of the project before starting. Here are some of the things that most need 
+ change.       
+    <ul>
+      <li><b><u>No comments anywhere in the code!</u></b></li>
+      <li> Some of the interfaces are not very forward looking or sufficiently
+ abstract to be extendable in a meaningful way. On the other hand some interfaces 
+ that should be simple are overly abstract.</li>
+      <li> The Code Generation and FileAccess portions were the very first 
+things  I did. I am not completely happy with them as they are. It can be 
+argued that some of the abstraction I have in place is not necessary, e.g. 
+we have decided on HDF5 so we don't need the capability to interface with 
+other data-file types, so why the need for the FileAccess types which are
+quite complex. On the other hand you never know what the future holds, maybe
+it will some day prove useful to have a data converter to translate to some
+other typr. This would be exceptionally easy to implement with the FileAccess
+types.</li>
+      <li>The code is full of inconsistancies about who should free objects; 
+if you pass an object (like a camera) to some function, do you have to delete 
+it after or does the function. I should redesign all functions to do this 
+consistantly, or use reference counting or a garbage collector to do it for 
+me.<br>
+      </li>
+      <li>There should be a consistent mechanism to configure all parts of 
+the analysis. A component factory is the way to do this, i.e. an object that 
+"creates" other objects for you. Then all the configuration could be restricted 
+to that one object, it could handle command line arguements, script options 
+etc. Would be VERY nice, but might take a lot of time to write and integrate.</li>
+      <li><br>
+      </li>
+    </ul>
+    </body>
+    </html>

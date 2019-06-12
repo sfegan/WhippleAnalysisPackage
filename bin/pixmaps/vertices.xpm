@@ -1,0 +1,21 @@
+/* XPM */       	    
+static const char *vertices[] = {
+"    16    13        4            1",
+". c #040404",	                  
+"# c #f30404",                    
+"$ c #f38484",                    
+"a c None",                       
+"aaaaaa....aaaaaa",   
+"aaaaa......aaaaa",
+"aaaaa......aaaaa",
+"aaaaa......aaaaa",
+"aaaa##....##aaaa",
+"aaaa##aaaa##aaaa",
+"aaa##aaaaaa##aaa",
+"aa##aaaaaaaa##aa",
+"a....aaaaaa....a",
+"......aaaa......",
+"......####......",
+"......####......",
+"a....aaaaaa....a",
+};    

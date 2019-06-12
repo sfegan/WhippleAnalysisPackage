@@ -1,0 +1,22 @@
+/* XPM */     
+static const char *labelling[] = {
+"    16    13        5            1",
+". c #040404",			  
+"# c #040680",          	  
+"a c None",             	  
+"b c #6466f3",          	  
+"c c #a1a3f3",	        	  
+"aaaaaa....aaaaaa",     	  
+"aaaa..bcbc..aaaa",     	  
+"aaa.cbcbcbcb.aaa",     	  
+"aa.cbc#..cbcb.aa",     	  
+"aa.bc#...bcbc.aa",               
+"a.bcbcb..cbcbc.a",
+"a.cbcbc..bcbcb.a",
+"a.bcbcb..cbcbc.a",
+"aa.bcb#..#cbcb.a",
+"aa.cb......cb.aa",
+"aaa.cbcbcbcb.aaa",
+"aaaa..bcbc..aaaa",
+"aaaaaa....aaaaaa",
+};

@@ -1,0 +1,10 @@
+--CutsHillasParam::LowerCutNImage=3
+--CutsHillasParam::LowerCutDist=0.40
+--CutsHillasParam::UpperCutDist=1.00
+--CutsHillasParam::LowerCutWidth=0.05
+--CutsHillasParam::UpperCutWidth=0.12
+--CutsHillasParam::LowerCutLength=0.13
+--CutsHillasParam::UpperCutLength=0.25
+--CutsHillasParam::LowerCutMax1=30
+--CutsHillasParam::LowerCutMax2=30
+--CutsHillasParam::UpperCutLengthOverSize=0.0004
